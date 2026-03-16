@@ -13,10 +13,14 @@ const groq = new Groq({ apiKey: GROQ_API_KEY });
 
 export const getCowHealthReport = async (cowId) => {
   try {
-    const { temperature, heartbeat, activity, methane_level } =
-      await getCowData(cowId);
-    console.log(GROQ_API_KEY);
+    const cowdata = await getCowData(cowId);
+    const { temperature, heartbeat, activity, methane_level } = cowdata[0];
+    console.log("Cow data retrieved:", {
+      cowdata,
+    });
+    //console.log(GROQ_API_KEY);
     const content = prompt(temperature, heartbeat, activity, methane_level);
+    console.log("Prompt sent to Groq:", content);
     const response = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
@@ -31,9 +35,11 @@ export const getCowHealthReport = async (cowId) => {
     const jsonResponse = response.choices[0].message.content
       .replace(/```json/g, "")
       .replace(/```/g, "")
+      .replace(/\\n/g, "")
+      .replace(/\\t/g, "")
       .trim();
 
-    console.log("my data", jsonResponse);
+    //console.log("my data", jsonResponse);
 
     return {
       message: "Cow health report generated",

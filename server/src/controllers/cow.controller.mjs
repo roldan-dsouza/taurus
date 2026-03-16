@@ -12,7 +12,7 @@ import { validateRequest } from "../utils/validate_request.util.mjs";
 export const addSensorData = async (req, res) => {
   try {
     const validation = validateRequest(req, [
-      "cowId",
+      "cow_id",
       "cow_name",
       "cow_breed",
       "cow_age",
@@ -27,7 +27,7 @@ export const addSensorData = async (req, res) => {
     }
 
     const {
-      cowId,
+      cow_id,
       cow_name,
       cow_breed,
       cow_age,
@@ -39,7 +39,7 @@ export const addSensorData = async (req, res) => {
     } = req.body;
 
     const sensorData = await addSensorDataService(
-      cowId,
+      cow_id,
       cow_name,
       cow_breed,
       cow_age,
@@ -68,14 +68,14 @@ export const addSensorData = async (req, res) => {
 
 export const getLatestCowData = async (req, res) => {
   try {
-    const validation = validateRequest(req, ["cowId"], "params");
+    const validation = validateRequest(req, ["cow_id"], "params");
     if (!validation.valid) {
       return sendErrorResponse(res, 400, validation.message);
     }
 
-    const { cowId } = req.params;
+    const { cow_id } = req.params;
 
-    const latestData = await getLatestCowDataService(cowId);
+    const latestData = await getLatestCowDataService(cow_id);
     if (!latestData) {
       return sendErrorResponse(res, 404, "No sensor data found for this cow");
     }

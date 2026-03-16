@@ -27,5 +27,4 @@ Provide:
 4. Recommendation
 
 Respond strictly in JSON format.`;
-
 export default prompt;

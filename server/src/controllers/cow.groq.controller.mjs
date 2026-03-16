@@ -7,9 +7,9 @@ import { validateRequest } from "../utils/validate_request.util.mjs";
 
 export const getAiAnalysis = async (req, res) => {
   try {
-    validateRequest(req, ["cowId"], "param");
-    const { cowId } = req.param;
-    const groqREsponse = await getCowHealthReport(cowId);
+    validateRequest(req, ["cow_id"], "param");
+    const { cow_id } = req.params;
+    const groqREsponse = await getCowHealthReport(cow_id);
 
     sendSuccessResponse(res, 200, "Sucessfull", groqREsponse);
   } catch (err) {
