@@ -1,12 +1,17 @@
 // server/src/prompt/prompt.mjs
 
-const prompt = `You are an AI veterinary assistant that monitors cow health using sensor data.
+const prompt = (
+  temperature,
+  heartbeat,
+  activity,
+  methane_level,
+) => `You are an AI veterinary assistant that monitors cow health using sensor data.
 
 Cow Health Data:
-Temperature: {temperature} °C
-Heartbeat: {heartbeat} bpm
-Activity Level: {activity}
-Methane Level: {methane_level} ppm
+Temperature: ${temperature} °C
+Heartbeat: ${heartbeat} bpm
+Activity Level: ${activity}
+Methane Level: ${methane_level} ppm
 
 Detect possible diseases such as:
 - Mastitis
