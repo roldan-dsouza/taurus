@@ -56,6 +56,6 @@ const cowSensorDataSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-cowSensorDataSchema.index({ cow_id: 1, reading_time: -1 });
+cowSensorDataSchema.index({ cow_id: 1, reading_time: -1 }); // gives the latest reading for each cow when queried
 
 export default mongoose.model("CowSensorData", cowSensorDataSchema);
