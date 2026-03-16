@@ -1,3 +1,5 @@
+// server/src/models/cow_sensor_data.model.mjs
+
 import mongoose from "mongoose";
 
 const cowSensorDataSchema = new mongoose.Schema(
