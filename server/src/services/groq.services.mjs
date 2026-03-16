@@ -2,9 +2,7 @@ import Groq from "groq-sdk";
 import dotenv from "dotenv";
 import prompt from "../prompt/prompt.mjs";
 dotenv.config();
-const GROQ_API_KEY =
-  process.env.GROQ_API_KEY ||
-  "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";
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 const groq = new Groq({ apiKey: GROQ_API_KEY });
 
