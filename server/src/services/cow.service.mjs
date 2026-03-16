@@ -1,3 +1,5 @@
+// server/src/services/cow.service.mjs
+
 import CowSensorData from "../models/cow_sensor_data.model.mjs";
 
 export const addSensorDataService = async (

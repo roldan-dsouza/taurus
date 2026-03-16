@@ -1,3 +1,4 @@
+// server/src/controllers/cow.controller.mjs
 import {
   sendErrorResponse,
   sendSuccessResponse,
