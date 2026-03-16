@@ -11,12 +11,14 @@ const GROQ_API_KEY =
 
 const groq = new Groq({ apiKey: GROQ_API_KEY });
 
-export const getCowHealthReport = async (cowId) => {
+export const getCowHealthReport = async (cowData) => {
   try {
-    const cowdata = await getCowData(cowId);
-    const { temperature, heartbeat, activity, methane_level } = cowdata[0];
-    console.log("Cow data retrieved:", {
-      cowdata,
+    const { temperature, heartbeat, activity, methane_level } = cowData;
+    console.log("Cow data received:", {
+      temperature,
+      heartbeat,
+      activity,
+      methane_level,
     });
     //console.log(GROQ_API_KEY);
     const content = prompt(temperature, heartbeat, activity, methane_level);

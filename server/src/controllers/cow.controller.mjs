@@ -6,6 +6,7 @@ import {
 import {
   addSensorDataService,
   getLatestCowDataService,
+  getAllLatestCowDataService,
 } from "../services/cow.service.mjs";
 import { validateRequest } from "../utils/validate_request.util.mjs";
 
@@ -88,6 +89,28 @@ export const getLatestCowData = async (req, res) => {
       res,
       500,
       "An error occurred while retrieving latest cow data",
+      err.message,
+    );
+  }
+};
+
+export const getAllLatestCowData = async (req, res) => {
+  try {
+    const allLatestData = await getAllLatestCowDataService();
+
+    sendSuccessResponse(
+      res,
+      200,
+      "All latest cow data retrieved",
+      allLatestData,
+    );
+  } catch (err) {
+    console.error("Error retrieving all latest cow data:", err);
+
+    sendErrorResponse(
+      res,
+      500,
+      "An error occurred while retrieving all latest cow data",
       err.message,
     );
   }

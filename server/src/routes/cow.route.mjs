@@ -4,6 +4,7 @@ import express from "express";
 import {
   addSensorData,
   getLatestCowData,
+  getAllLatestCowData,
 } from "../controllers/cow.controller.mjs";
 import { getAiAnalysis } from "../controllers/cow.groq.controller.mjs";
 
@@ -14,6 +15,9 @@ router.post("/sensor-data", addSensorData);
 
 // Get latest sensor data of a cow
 router.get("/:cow_id/latest", getLatestCowData);
+
+// Get all latest sensor data
+router.get("/", getAllLatestCowData);
 
 // Send cow data to Groq for disease analysis
 router.post("/analyze/:cow_id", getAiAnalysis);
