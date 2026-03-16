@@ -46,5 +46,3 @@ export const getCowHealthReport = async (cowId) => {
     throw error;
   }
 };
-
-await getCowHealthReport(39.5, 120, "Low", 1500);

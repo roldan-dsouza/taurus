@@ -4,7 +4,7 @@ import express from "express";
 import {
   addSensorData,
   getLatestCowData,
-} from "../controllers/cowController.js";
+} from "../controllers/cow.controller.mjs";
 import { getAiAnalysis } from "../controllers/cow.groq.controller.mjs";
 
 const router = express.Router();
