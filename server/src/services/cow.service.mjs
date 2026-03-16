@@ -28,3 +28,12 @@ export const addSensorDataService = async (
 
   return sensorData;
 };
+
+export const getLatestCowDataService = async (cow_id) => {
+  // get the latest sensor data for a cow using cow_id, sorted by reading_time in descending order and limit to 1
+  const latestData = await CowSensorData.findOne({ cow_id })
+    .sort({ reading_time: -1 })
+    .exec();
+
+  return latestData;
+};

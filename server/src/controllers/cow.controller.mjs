@@ -2,6 +2,10 @@ import {
   sendErrorResponse,
   sendSuccessResponse,
 } from "../utils/response.util.mjs";
+import {
+  addSensorDataService,
+  getLatestCowDataService,
+} from "../services/cow.service.mjs";
 import { validateRequest } from "../utils/validate_request.util.mjs";
 
 export const addSensorData = async (req, res) => {
@@ -63,16 +67,16 @@ export const addSensorData = async (req, res) => {
 
 export const getLatestCowData = async (req, res) => {
   try {
-    const { cowId } = req.params;
-
     const validation = validateRequest(req, ["cowId"], "params");
     if (!validation.valid) {
       return sendErrorResponse(res, 400, validation.message);
     }
 
+    const { cowId } = req.params;
+
     const latestData = await getLatestCowDataService(cowId);
     if (!latestData) {
-      return sendErrorResponse(res, 404, "Cow not found");
+      return sendErrorResponse(res, 404, "No sensor data found for this cow");
     }
 
     sendSuccessResponse(res, 200, "Latest cow data retrieved", latestData);
