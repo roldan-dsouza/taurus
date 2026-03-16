@@ -60,3 +60,30 @@ export const addSensorData = async (req, res) => {
     );
   }
 };
+
+export const getLatestCowData = async (req, res) => {
+  try {
+    const { cowId } = req.params;
+
+    const validation = validateRequest(req, ["cowId"], "params");
+    if (!validation.valid) {
+      return sendErrorResponse(res, 400, validation.message);
+    }
+
+    const latestData = await getLatestCowDataService(cowId);
+    if (!latestData) {
+      return sendErrorResponse(res, 404, "Cow not found");
+    }
+
+    sendSuccessResponse(res, 200, "Latest cow data retrieved", latestData);
+  } catch (err) {
+    console.error("Error retrieving latest cow data:", err);
+
+    sendErrorResponse(
+      res,
+      500,
+      "An error occurred while retrieving latest cow data",
+      err.message,
+    );
+  }
+};
