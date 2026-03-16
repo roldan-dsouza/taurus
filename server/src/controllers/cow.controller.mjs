@@ -1,12 +1,17 @@
-import { sendErrorResponse } from "../utils/response.util.mjs";
+import {
+  sendErrorResponse,
+  sendSuccessResponse,
+} from "../utils/response.util.mjs";
 import { validateRequest } from "../utils/validate_request.util.mjs";
 
 export const addSensorData = async (req, res) => {
   try {
-    const { cowId, temperature, heartbeat, activity, methane_level } = req.body;
-
     const validation = validateRequest(req, [
       "cowId",
+      "cow_name",
+      "cow_breed",
+      "cow_age",
+      "device_id",
       "temperature",
       "heartbeat",
       "activity",
@@ -16,8 +21,24 @@ export const addSensorData = async (req, res) => {
       return sendErrorResponse(res, 400, validation.message);
     }
 
-    const sensorData = addSensorDataService(
+    const {
       cowId,
+      cow_name,
+      cow_breed,
+      cow_age,
+      device_id,
+      temperature,
+      heartbeat,
+      activity,
+      methane_level,
+    } = req.body;
+
+    const sensorData = await addSensorDataService(
+      cowId,
+      cow_name,
+      cow_breed,
+      cow_age,
+      device_id,
       temperature,
       heartbeat,
       activity,
