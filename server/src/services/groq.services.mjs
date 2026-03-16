@@ -35,15 +35,15 @@ export const getCowHealthReport = async (cowId) => {
     const jsonResponse = response.choices[0].message.content
       .replace(/```json/g, "")
       .replace(/```/g, "")
-      .replace(/\\n/g, "")
-      .replace(/\\t/g, "")
+      .replace(/\n/g, "")
+      .replace(/\t/g, "")
       .trim();
 
     //console.log("my data", jsonResponse);
 
     return {
       message: "Cow health report generated",
-      jsonResponse: jsonResponse,
+      jsonResponse: JSON.parse(jsonResponse),
     };
   } catch (error) {
     console.log("Full error:", error);
