@@ -16,6 +16,6 @@ router.post("/sensor-data", addSensorData);
 router.get("/cow/:cow_id/latest", getLatestCowData);
 
 // Send cow data to Groq for disease analysis
-router.post("/analyze/:cow_id", getAiAnalysis);
+router.post("/analyze/:cowId", getAiAnalysis);
 
 export default router;
