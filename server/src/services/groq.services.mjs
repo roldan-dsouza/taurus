@@ -1,18 +1,18 @@
 import Groq from "groq-sdk";
 import dotenv from "dotenv";
 import prompt from "../prompt/prompt.mjs";
+import { getCowData } from "../repository/cowSensorData.mjs";
 dotenv.config();
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_API_KEY =
+  process.env.GROQ_API_KEY ||
+  "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";
 
 const groq = new Groq({ apiKey: GROQ_API_KEY });
 
-export const getCowHealthReport = async (
-  temperature,
-  heartbeat,
-  activity,
-  methane_level,
-) => {
+export const getCowHealthReport = async (cowId) => {
   try {
+    const { temperature, heartbeat, activity, methane_level } =
+      await getCowData(cowId);
     console.log(GROQ_API_KEY);
     const content = prompt(temperature, heartbeat, activity, methane_level);
     const response = await groq.chat.completions.create({
@@ -26,11 +26,16 @@ export const getCowHealthReport = async (
       max_tokens: 4000,
     });
 
-    const jsonResponse = response.choices[0].message.content;
-    console.log(jsonResponse);
+    const jsonResponse = response.choices[0].message.content
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    console.log("my data", jsonResponse);
+
     return {
       message: "Cow health report generated",
-      simplifiedHtml: jsonResponse,
+      jsonResponse: jsonResponse,
     };
   } catch (error) {
     console.log("Full error:", error);
@@ -40,4 +45,4 @@ export const getCowHealthReport = async (
   }
 };
 
-//await getCowHealthReport(39.5, 120, "Low", 1500);
+await getCowHealthReport(39.5, 120, "Low", 1500);
