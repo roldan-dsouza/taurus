@@ -4,8 +4,8 @@ import express from "express";
 import {
   addSensorData,
   getLatestCowData,
-  analyzeCowHealth,
-} from "../controllers/cowController.js";
+} from "../controllers/cow.controller.mjs";
+import { getAiAnalysis } from "../controllers/cow.groq.controller.mjs";
 
 const router = express.Router();
 
@@ -16,6 +16,6 @@ router.post("/sensor-data", addSensorData);
 router.get("/cow/:cow_id/latest", getLatestCowData);
 
 // Send cow data to Groq for disease analysis
-router.post("/analyze/:cow_id", analyzeCowHealth);
+router.post("/analyze/:cowId", getAiAnalysis);
 
 export default router;
