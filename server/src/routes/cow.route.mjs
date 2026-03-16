@@ -5,7 +5,7 @@ import {
   addSensorData,
   getLatestCowData,
   analyzeCowHealth,
-} from "../controllers/cowController.js";
+} from "../controllers/cow.controller.mjs";
 
 const router = express.Router();
 
