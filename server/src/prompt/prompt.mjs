@@ -1,3 +1,5 @@
+// server/src/prompt/prompt.mjs
+
 const prompt = `You are an AI veterinary assistant that monitors cow health using sensor data.
 
 Cow Health Data:
