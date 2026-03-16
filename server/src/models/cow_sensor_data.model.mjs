@@ -2,6 +2,7 @@
 
 import mongoose from "mongoose";
 
+//since this is a prototype, we are not separating cow profile and sensor data, but in production we should have a separate collection for cow profiles and reference them in sensor data for better scalability and flexibility
 const cowSensorDataSchema = new mongoose.Schema(
   {
     cow_id: {
@@ -18,7 +19,7 @@ const cowSensorDataSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // add a function to calculate cow age based on birth date
+    // add a function to calculate cow age based on birth date for production, but for prototype we just take age as input
     cow_age: {
       type: Number,
       required: true,

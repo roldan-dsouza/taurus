@@ -4,7 +4,6 @@ import express from "express";
 import {
   addSensorData,
   getLatestCowData,
-  analyzeCowHealth,
 } from "../controllers/cowController.js";
 import { getAiAnalysis } from "../controllers/cow.groq.controller.mjs";
 
