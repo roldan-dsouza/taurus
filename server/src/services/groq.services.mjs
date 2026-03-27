@@ -20,7 +20,7 @@ export const getCowHealthReport = async (cowData) => {
       activity,
       methane_level,
     });
-    //console.log(GROQ_API_KEY);
+
     const content = prompt(temperature, heartbeat, activity, methane_level);
     console.log("Prompt sent to Groq:", content);
     const response = await groq.chat.completions.create({

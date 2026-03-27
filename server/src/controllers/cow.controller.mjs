@@ -39,7 +39,7 @@ export const addSensorData = async (req, res) => {
       methane_level,
     } = req.body;
 
-    const sensorData = await addSensorDataService(
+    const sensorData = await addSensorDataService({
       cow_id,
       cow_name,
       cow_breed,
@@ -49,7 +49,7 @@ export const addSensorData = async (req, res) => {
       heartbeat,
       activity,
       methane_level,
-    );
+    });
     if (!sensorData) {
       return sendErrorResponse(res, 404, "Cow not found");
     }

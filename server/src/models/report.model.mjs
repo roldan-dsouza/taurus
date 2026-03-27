@@ -1,20 +1,24 @@
+// src/models/report.model.mjs
+
 import mongoose from "mongoose";
 
-const cowRReportSchema = new mongoose.Schema(
+const cowReportSchema = new mongoose.Schema(
   {
     cow_id: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Cow",
       required: true,
     },
-    report_details: [
+    report_details_history: [
       {
-        type: mongoose.Schema.Types.Mixed, // can store any type of data, but in production we should have a defined structure for report details for better consistency and validation
+        type: mongoose.Schema.Types.Mixed, // stores the full report details as returned by Groq, can be structured further if needed
+        slice: -5, // keep only the latest 5 reports in history to prevent unbounded growth, adjust as needed
       },
     ],
   },
   { timestamps: true },
 );
 
-cowRReportSchema.index({ cow_id: 1, createdAt: -1 }); // gives the latest report for each cow when queried
+cowReportSchema.index({ cow_id: 1, createdAt: -1 }); // gives the latest report for each cow when queried
 
-export default mongoose.model("Report", cowRReportSchema);
+export default mongoose.model("Report", cowReportSchema);

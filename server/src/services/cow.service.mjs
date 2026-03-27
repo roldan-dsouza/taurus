@@ -1,6 +1,9 @@
 // server/src/services/cow.service.mjs
 
 import CowSensorData from "../models/cow_sensor_data.model.mjs";
+import Report from "../models/report.model.mjs";
+import Cow from "../models/cow.model.mjs";
+
 import { getCowHealthReport } from "./groq.services.mjs";
 
 export const addSensorDataService = async (
@@ -14,13 +17,22 @@ export const addSensorDataService = async (
   activity,
   methane_level,
 ) => {
-  // this is called time-series data storage, much easier to scale and query for latest data
+  // check if cow exists, if not create a new cow profile
+  let cow = await Cow.findOne({ cow_id });
+  if (!cow) {
+    cow = new Cow({
+      cow_id,
+      cow_name,
+      cow_breed,
+      cow_age,
+      device_id,
+    });
+    await cow.save();
+  }
+
+  // create a new sensor data entry for the cow
   const sensorData = new CowSensorData({
     cow_id,
-    cow_name,
-    cow_breed,
-    cow_age,
-    device_id,
     temperature,
     heartbeat,
     activity,
@@ -34,9 +46,13 @@ export const addSensorDataService = async (
 
 export const getLatestCowDataService = async (cow_id) => {
   // get the latest sensor data for a cow using cow_id, sorted by reading_time in descending order and limit to 1
-  const latestData = await CowSensorData.findOne({ cow_id })
-    .sort({ reading_time: -1 })
-    .exec();
+  const latestData = await CowSensorData.findOne({ cow_id }).sort({
+    reading_time: -1,
+  });
+
+  if (!latestData) {
+    throw new Error("Cow not found");
+  }
 
   return latestData;
 };

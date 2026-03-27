@@ -6,23 +6,30 @@ import mongoose from "mongoose";
 const cowSensorDataSchema = new mongoose.Schema(
   {
     cow_id: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Cow",
       required: true,
     },
     temperature: {
       type: Number,
+      min: 35,
+      max: 42,
     },
 
     heartbeat: {
       type: Number,
+      min: 40,
+      max: 120,
     },
 
     activity: {
       type: Number,
+      min: 0,
     },
 
     methane_level: {
       type: Number,
+      min: 0,
     },
 
     location: {
