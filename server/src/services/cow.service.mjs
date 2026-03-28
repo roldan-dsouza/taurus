@@ -35,9 +35,10 @@ export const addSensorDataService = async ({
 
 export const getLatestCowDataService = async (cow_id) => {
   const cow = await Cow.findOne({ cow_id });
+  console.log("Found cow:", cow);
   if (!cow) return null;
 
-  const latestData = await CowSensorData.findOne({ cow_id: cow._id })
+  const latestData = await CowSensorData.findOne({ cow_id: cow.cow_id })
     .sort({ reading_time: -1 })
     .lean();
 
@@ -68,4 +69,14 @@ export const getAllLatestCowDataService = async () => {
   );
 
   return dataWithRisk;
+};
+
+export const getAllDataService = async (cow_id) => {
+  const cow = await Cow.findOne({ cow_id });
+  if (!cow) return null;
+
+  const allData = await CowSensorData.find({ cow_id: cow._id })
+    .sort({ reading_time: -1 })
+    .lean();
+  return allData || null;
 };

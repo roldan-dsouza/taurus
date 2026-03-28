@@ -2,12 +2,14 @@
 
 import Groq from "groq-sdk";
 import dotenv from "dotenv";
+dotenv.config();
 import prompt from "../prompt/prompt.mjs";
 import Report from "../models/report.model.mjs";
 
-dotenv.config();
+const GROQ_API_KEY =
+  process.env.GROQ_API_KEY ||
+  "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";
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
 if (!GROQ_API_KEY) {
   throw new Error("GROQ_API_KEY is not set in environment variables.");
 }
@@ -15,7 +17,7 @@ if (!GROQ_API_KEY) {
 const groq = new Groq({ apiKey: GROQ_API_KEY });
 
 export const getCowHealthReport = async (cowData) => {
-  const { cow_id, temperature, heartbeat, activity, methane_level } = cowData;
+  const [{ cow_id, temperature, heartbeat, activity, methane_level }] = cowData;
 
   const content = prompt(temperature, heartbeat, activity, methane_level);
 

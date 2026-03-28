@@ -7,6 +7,7 @@ import {
   addSensorDataService,
   getLatestCowDataService,
   getAllLatestCowDataService,
+  getAllDataService,
 } from "../services/cow.service.mjs";
 import { validateRequest } from "../utils/validate_request.util.mjs";
 
@@ -111,6 +112,32 @@ export const getAllLatestCowData = async (req, res) => {
       res,
       500,
       "An error occurred while retrieving all latest cow data",
+      err.message,
+    );
+  }
+};
+
+export const getAllData = async (req, res) => {
+  try {
+    const validation = validateRequest(req, ["cow_id"], "params");
+    if (!validation.valid) {
+      return sendErrorResponse(res, 400, validation.message);
+    }
+
+    const { cow_id } = req.params;
+
+    const allData = await getAllDataService(cow_id);
+
+    if (!allData || allData.length === 0) {
+      return sendErrorResponse(res, 404, "No sensor data found for this cow");
+    }
+    sendSuccessResponse(res, 200, "All cow data retrieved", allData);
+  } catch (err) {
+    console.error("Error retrieving all cow data:", err);
+    sendErrorResponse(
+      res,
+      500,
+      "An error occurred while retrieving all cow data",
       err.message,
     );
   }

@@ -5,6 +5,7 @@ import {
   addSensorData,
   getLatestCowData,
   getAllLatestCowData,
+  getAllData,
 } from "../controllers/cow.controller.mjs";
 import { getAiAnalysis } from "../controllers/cow.groq.controller.mjs";
 
@@ -15,6 +16,9 @@ router.post("/sensor-data", addSensorData);
 
 // Get latest sensor data of a cow
 router.get("/:cow_id/latest", getLatestCowData);
+
+// Get all data of a cow
+router.get("/:cow_id", getAllData);
 
 // Get all latest sensor data
 router.get("/", getAllLatestCowData);
