@@ -43,6 +43,19 @@ export const getCowHealthReport = async (cowData) => {
 
     //console.log("my data", jsonResponse);
 
+    // store the report in the database
+    const report = new Report({
+      cow_id: cowData.cow_id,
+      report_details_history: report_details_history.push({
+        temperature,
+        heartbeat,
+        activity,
+        methane_level,
+        report: JSON.parse(jsonResponse),
+      }),
+    });
+    await report.save();
+
     return {
       message: "Cow health report generated",
       jsonResponse: JSON.parse(jsonResponse),
