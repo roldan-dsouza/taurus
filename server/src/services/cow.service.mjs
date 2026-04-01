@@ -34,11 +34,11 @@ export const addSensorDataService = async ({
 };
 
 export const getLatestCowDataService = async (cow_id) => {
-  const cow = await Cow.findOne({ cow_id });
+  const cow = await Cow.findById(cow_id); // ✅ use findById instead of findOne({ cow_id })
   console.log("Found cow:", cow);
   if (!cow) return null;
 
-  const latestData = await CowSensorData.findOne({ cow_id: cow._id })
+  const latestData = await CowSensorData.findOne({ cow_id: cow_id })
     .sort({ reading_time: -1 })
     .lean();
 
