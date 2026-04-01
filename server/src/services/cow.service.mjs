@@ -38,7 +38,7 @@ export const getLatestCowDataService = async (cow_id) => {
   console.log("Found cow:", cow);
   if (!cow) return null;
 
-  const latestData = await CowSensorData.findOne({ cow_id: cow.cow_id })
+  const latestData = await CowSensorData.findOne({ cow_id: cow._id })
     .sort({ reading_time: -1 })
     .lean();
 
