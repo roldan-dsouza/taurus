@@ -136,7 +136,13 @@ export default function Dashboard() {
             const badgeColor = getBadgeColor(cow.risk_level || "");
 
             return (
-              <Link href={`/cow/${cow.cow_id}`} key={cow.cow_id}>
+              <Link
+                href={`/cow/${cow.cow_id}?name=${encodeURIComponent(
+                  cow.cow_name,
+                )}&age=${cow.cow_age}&device=${cow.device_id}&breed=${encodeURIComponent(
+                  cow.cow_breed,
+                )}`}
+              >
                 <div
                   className={`group relative overflow-hidden rounded-2xl border bg-gradient-to-br ${cardColor} shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer h-full`}
                 >
