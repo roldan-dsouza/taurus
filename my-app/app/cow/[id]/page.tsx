@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { use, useEffect, useState } from "react";
 import { get } from "http";
+import { useSearchParams } from "next/navigation";
 
 interface Cow {
   cow_id: string;
@@ -32,6 +33,14 @@ export default function CowDetail() {
   const [cow, setCow] = useState<Cow | null>(null);
   const [analysis, setAnalysis] = useState<any>(null);
 
+  const searchParams = useSearchParams();
+
+  const name = searchParams.get("name");
+  const age = searchParams.get("age");
+  const device = searchParams.get("device");
+  const breed = searchParams.get("breed");
+
+  console.log("Search Params:", { name, age, device });
   useEffect(() => {
     const getCowData = async () => {
       try {
@@ -45,7 +54,13 @@ export default function CowDetail() {
           },
         );
         const response = await res.json();
-        const data = response.data; // Assuming the response has { success, message, data }
+
+        if (!res.ok || !response.data) {
+          console.error("API error:", response.message || res.statusText);
+          return;
+        }
+
+        const data = response.data;
 
         // Map the data to match frontend expectations
         const mappedCow: Cow = {
@@ -118,7 +133,7 @@ export default function CowDetail() {
           </button>
           <div>
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
-              {cow.cow_name}
+              {name}
             </h1>
             <p className="text-gray-600">Detailed health monitoring</p>
           </div>
@@ -133,18 +148,14 @@ export default function CowDetail() {
             <div className="text-gray-600 text-sm font-bold uppercase tracking-wide mb-2">
               Breed
             </div>
-            <div className="text-3xl font-bold text-gray-900">
-              {cow.cow_breed}
-            </div>
+            <div className="text-3xl font-bold text-gray-900">{breed}</div>
           </div>
 
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-amber-200 p-6 shadow-sm hover:shadow-md transition">
             <div className="text-gray-600 text-sm font-bold uppercase tracking-wide mb-2">
               Age
             </div>
-            <div className="text-3xl font-bold text-gray-900">
-              {cow.cow_age} years
-            </div>
+            <div className="text-3xl font-bold text-gray-900">{age} years</div>
           </div>
 
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-emerald-200 p-6 shadow-sm hover:shadow-md transition">
@@ -294,7 +305,7 @@ export default function CowDetail() {
             Device ID
           </div>
           <div className="text-2xl font-bold text-gray-900 font-mono">
-            {cow.device_id}
+            {device}
           </div>
         </div>
 
