@@ -6,9 +6,7 @@ dotenv.config();
 import prompt from "../prompt/prompt.mjs";
 import Report from "../models/report.model.mjs";
 
-const GROQ_API_KEY =
-  process.env.GROQ_API_KEY ||
-  "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";
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 if (!GROQ_API_KEY) {
   throw new Error("GROQ_API_KEY is not set in environment variables.");
