@@ -18,6 +18,7 @@ const cowSchema = new mongoose.Schema({
   // replaced cow_age with cow_dob : age derived, dob is stable
   cow_dob: {
     type: Date,
+    default: null,
     required: true,
   },
   device_id: {
