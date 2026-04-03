@@ -32,30 +32,31 @@ export default function IPManager() {
       const response = await fetch(`http://${ipAddress}/data`);
       const data = await response.json();
       console.log(data);
-      /*
-      "cow_id",
-      "cow_name",
-      "cow_breed",
-      "cow_dob",
-      "device_id",
-      "temperature",
-      "heartbeat",
-      "activity",
-      "methane_level",
-      
-      */
+      const dataToSend = {
+        cow_id: "COW108",
+        cow_name: "Nidhi",
+        cow_breed: "Desi",
+        cow_dob: "2015-06-15",
+        device_id: "dev108",
+        temperature: data.temperature,
+        heartbeat: data.bpm,
+        activity: data.points,
+        methane_level: data.gas,
+      };
+
+      console.log("Data to send:", dataToSend);
 
       setStatus("Forwarding...");
 
       // 2. POST TO FIXED API (Passing data directly)
 
-      const FIXED_API = `${process.env.NEXT_PUBLIC_BACKEND}/api/sensor-data`;
-      await fetch(FIXED_API, {
+      const FIXED_API = `${process.env.NEXT_PUBLIC_BACKEND}/api/cows/sensor-data`;
+      const respoce = await fetch(FIXED_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(dataToSend),
       });
-
+      console.log(await respoce.json());
       setStatus("✅ Cycle Complete");
     } catch (err) {
       setStatus("❌ Bridge Failed");
