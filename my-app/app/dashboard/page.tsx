@@ -68,7 +68,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchCowsData = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/cows");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/cows`);
         const response = await res.json();
         const data = response.data; // Assuming { success, message, data: array }
 

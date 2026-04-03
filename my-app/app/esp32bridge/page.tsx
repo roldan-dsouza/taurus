@@ -32,11 +32,24 @@ export default function IPManager() {
       const response = await fetch(`http://${ipAddress}/data`);
       const data = await response.json();
       console.log(data);
+      /*
+      "cow_id",
+      "cow_name",
+      "cow_breed",
+      "cow_dob",
+      "device_id",
+      "temperature",
+      "heartbeat",
+      "activity",
+      "methane_level",
+      
+      */
 
       setStatus("Forwarding...");
 
       // 2. POST TO FIXED API (Passing data directly)
-      const FIXED_API = "https://your-fixed-api.com/endpoint";
+
+      const FIXED_API = `${process.env.NEXT_PUBLIC_BACKEND}/api/sensor-data`;
       await fetch(FIXED_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
