@@ -5,6 +5,7 @@ import { CheckCircle, AlertTriangle, Activity } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface Cow {
+  _id: string;
   cow_id: string;
   cow_name: string;
   cow_breed: string;
@@ -79,8 +80,9 @@ export default function Dashboard() {
           // Calculate Age from cow_dob
           const dob = new Date(cowDetails.cow_dob);
           const age = new Date().getFullYear() - dob.getFullYear();
-
+          console.log(cowDetails._id);
           return {
+            _id: cowDetails._id,
             cow_id: cowDetails.cow_id,
             cow_name: cowDetails.cow_name,
             cow_breed: cowDetails.cow_breed,
@@ -160,7 +162,7 @@ export default function Dashboard() {
 
             return (
               <Link
-                href={`/cow/${cow.cow_id}?name=${encodeURIComponent(
+                href={`/cow/${cow._id}?name=${encodeURIComponent(
                   cow.cow_name,
                 )}&age=${cow.cow_age}&device=${cow.device_id}&breed=${encodeURIComponent(
                   cow.cow_breed,

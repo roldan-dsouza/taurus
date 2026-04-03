@@ -45,62 +45,63 @@ export default function CowDetail() {
   useEffect(() => {
     const getCowData = async () => {
       try {
+        // 1. Fetch Cow Data
         const res = await fetch(
           `http://localhost:8000/api/cows/${cowId}/latest`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
         );
         const response = await res.json();
 
-        if (!res.ok || !response.data) {
-          console.error("API error:", response.message || res.statusText);
-          return;
-        }
-
-        const data = response.data;
-
-        // Map the data to match frontend expectations
-        const mappedCow: Cow = {
-          ...data,
-          location: {
-            lat: data.location?.latitude || 0,
-            lng: data.location?.longitude || 0,
-          },
-          reading_time: data.reading_time
-            ? new Date(data.reading_time).toLocaleString()
-            : "Unknown",
-        };
-
-        setCow(mappedCow);
-        console.log("Fetched cow data:", mappedCow);
-
-        // Fetch AI analysis
-        try {
-          const analysisRes = await fetch(
-            `http://localhost:8000/api/cows/analyze/${cowId}`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
+        if (res.ok && response.data) {
+          const data = response.data;
+          const mappedCow: Cow = {
+            ...data,
+            location: {
+              lat: data.location?.latitude || 0,
+              lng: data.location?.longitude || 0,
             },
-          );
-          const analysisResponse = await analysisRes.json();
-          setAnalysis(analysisResponse.data.jsonResponse);
-          console.log("Fetched analysis:", analysisResponse.data.jsonResponse);
-        } catch (analysisErr) {
-          console.error("Error fetching analysis:", analysisErr);
+            reading_time: data.reading_time
+              ? new Date(data.reading_time).toLocaleString()
+              : "Unknown",
+          };
+
+          setCow(mappedCow);
+
+          // 2. Fetch AI Analysis ONLY if we don't have it yet
+          // This 'if (!analysis)' check prevents the loop
         }
       } catch (err) {
-        console.error("Error fetching cow data:", err);
+        console.error("Error fetching data:", err);
       }
     };
 
-    if (cowId) getCowData();
+    if (cowId) {
+      getCowData();
+    }
+  }, []); // Add analysis to the dependency array
+
+  const GetAnalysis = async () => {
+    // Fetch AI analysis based on cow data
+    if (!analysis) {
+      const analysisRes = await fetch(
+        `http://localhost:8000/api/cows/analyze/${cowId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      const analysisResponse = await analysisRes.json();
+
+      if (analysisResponse.data?.jsonResponse) {
+        setAnalysis(analysisResponse.data.jsonResponse);
+      }
+      console.log(" analysis:", analysisResponse);
+      console.log("called GetAnalysis with cowId:", cowId);
+    }
+    // This will show the current state of analysis after the fetch attempt
+  };
+
+  useEffect(() => {
+    GetAnalysis();
   }, [cowId]);
 
   if (!cow) {
