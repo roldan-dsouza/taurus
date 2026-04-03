@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: "gowmitra",
+      dbName: "gowmitra2",
     });
 
     console.log("MongoDB connected successfully");

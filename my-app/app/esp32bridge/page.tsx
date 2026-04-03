@@ -39,13 +39,14 @@ export default function IPManager() {
         cow_dob: "2015-06-15",
         device_id: "dev108",
         temperature: data.temperature,
-        heartbeat: data.bpm,
-        activity: data.points,
+        heartbeat: data.bpm - 5,
+        activity: data.intensity,
         methane_level: data.gas,
       };
 
       console.log("Data to send:", dataToSend);
-
+      const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+      await delay(2000);
       setStatus("Forwarding...");
 
       // 2. POST TO FIXED API (Passing data directly)

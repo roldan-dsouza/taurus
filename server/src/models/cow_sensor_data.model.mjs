@@ -12,7 +12,6 @@ const cowSensorDataSchema = new mongoose.Schema(
     },
     temperature: {
       type: Number,
-   
     },
 
     heartbeat: {

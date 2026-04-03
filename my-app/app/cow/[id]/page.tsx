@@ -315,34 +315,52 @@ export default function CowDetail() {
         </div>
 
         {/* AI Analysis */}
-        {analysis && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-blue-200 p-8 mb-8 shadow-lg">
-            <div className="flex items-start gap-4">
-              <div className="bg-blue-100 rounded-xl p-3 flex-shrink-0">
-                <CheckCircle className="w-6 h-6 text-blue-600" />
+        {analysis &&
+          (() => {
+            const risk = analysis.Risk_Level?.toLowerCase();
+            const color =
+              risk === "high"
+                ? "red"
+                : risk === "medium"
+                  ? "yellow"
+                  : risk === "low"
+                    ? "green"
+                    : "blue";
+            return (
+              <div
+                className={`bg-white/80 backdrop-blur-sm rounded-2xl border border-${color}-200 p-8 mb-8 shadow-lg`}
+              >
+                <div className="flex items-start gap-4">
+                  <div
+                    className={`bg-${color}-100 rounded-xl p-3 flex-shrink-0`}
+                  >
+                    <CheckCircle className={`w-6 h-6 text-${color}-600`} />
+                  </div>
+                  <div className="flex-1">
+                    <div
+                      className={`text-${color}-700 text-sm font-bold uppercase tracking-wide mb-2`}
+                    >
+                      AI Health Analysis
+                    </div>
+                    <div className="text-lg font-semibold text-gray-900 mb-2">
+                      Risk Level: {analysis.Risk_Level}
+                    </div>
+                    <div className="text-md font-semibold text-gray-900 mb-4">
+                      Possible Disease:{" "}
+                      {analysis.possible_disease || analysis.Possible_Disease}
+                    </div>
+                    <p className="text-gray-700 leading-relaxed mb-4">
+                      Reason: {analysis.reason || analysis.Reason}
+                    </p>
+                    <div className="text-sm text-gray-600 font-semibold mb-1">
+                      Recommendation:{" "}
+                      {analysis.recommendation || analysis.Recommendation}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="flex-1">
-                <div className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-2">
-                  AI Health Analysis
-                </div>
-                <div className="text-lg font-semibold text-gray-900 mb-2">
-                  Risk Level: {analysis.Risk_Level}
-                </div>
-                <div className="text-md font-semibold text-gray-900 mb-4">
-                  Possible Disease:{" "}
-                  {analysis.possible_disease || analysis.Possible_Disease}
-                </div>
-                <p className="text-gray-700 leading-relaxed mb-4">
-                  Reason: {analysis.reason || analysis.Reason}
-                </p>
-                <div className="text-sm text-gray-600 font-semibold mb-1">
-                  Recommendation:{" "}
-                  {analysis.recommendation || analysis.Recommendation}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+            );
+          })()}
 
         {/* Back Button */}
         <div className="text-center">
