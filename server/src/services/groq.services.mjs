@@ -15,8 +15,8 @@ if (!GROQ_API_KEY) {
 const groq = new Groq({ apiKey: GROQ_API_KEY });
 
 export const getCowHealthReport = async (cowData) => {
-  const { cow_id, temperature, heartbeat, activity, methane_level } = cowData;
-
+  const [{ cow_id, temperature, heartbeat, activity, methane_level }] = cowData;
+  console.log(cowData);
   const content = prompt(temperature, heartbeat, activity, methane_level);
 
   const response = await groq.chat.completions.create({

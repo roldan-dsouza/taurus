@@ -5,7 +5,9 @@ import dotenv from "dotenv";
 // Database connection function
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI, {
+      dbName: "gowmitra",
+    });
 
     console.log("MongoDB connected successfully");
   } catch (err) {

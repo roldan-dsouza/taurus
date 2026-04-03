@@ -46,33 +46,36 @@ export const getLatestCowDataService = async (cow_id) => {
 };
 
 export const getAllLatestCowDataService = async () => {
-  const latestData = await CowSensorData.aggregate([
-    { $sort: { cow_id: 1, reading_time: -1 } },
-    { $group: { _id: "$cow_id", latest: { $first: "$$ROOT" } } },
-    { $replaceRoot: { newRoot: "$latest" } },
-  ]);
+  const cows = await Cow.find({}).lean();
 
-  const dataWithRisk = await Promise.all(
-    latestData.map(async (cow) => {
+  const dataWithSensorData = await Promise.all(
+    cows.map(async (cow) => {
+      const sensorData = await CowSensorData.find({ cow_id: cow._id })
+        .sort({ reading_time: -1 })
+        .lean();
+
       try {
-        const analysis = await getCowHealthReport(cow);
+        const analysis = await getCowHealthReport(
+          sensorData.length > 0 ? sensorData[0] : {},
+        );
         const riskLevel =
           analysis.jsonResponse?.Risk_Level ||
           analysis.jsonResponse?.risk_level ||
           "Unknown";
-        return { ...cow, risk_level: riskLevel };
+        return { cow, sensorData, risk_level: riskLevel };
       } catch (err) {
         console.error(`Error getting analysis for cow ${cow.cow_id}:`, err);
-        return { ...cow, risk_level: "Unknown" };
+        return { cow, sensorData, risk_level: "Unknown" };
       }
     }),
   );
 
-  return dataWithRisk;
+  return dataWithSensorData;
 };
 
 export const getAllDataService = async (cow_id) => {
-  const cow = await Cow.findOne({ cow_id });
+  const cow = await Cow.findOne({ _id: cow_id });
+  console.log(cow);
   if (!cow) return null;
 
   const allData = await CowSensorData.find({ cow_id: cow._id })
