@@ -1,5 +1,6 @@
 // server/src/config/db.config.mjs
 import mongoose from "mongoose";
+import dotenv from "dotenv";
 
 // Database connection function
 const connectDB = async () => {
