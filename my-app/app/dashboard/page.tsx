@@ -82,6 +82,9 @@ export default function Dashboard() {
           reading_time: getRelativeTime(cow.reading_time),
           risk_level: cow.risk_level,
         }));
+        if (!res.ok) {
+          throw new Error(response.message || "Failed to fetch cows data");
+        }
         console.log("Fetched cows data:", mappedCows);
 
         setCowsData(mappedCows);
