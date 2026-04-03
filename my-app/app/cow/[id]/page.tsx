@@ -43,9 +43,10 @@ export default function CowDetail() {
 
   console.log("Search Params:", { name, age, device });
   useEffect(() => {
-    const getCowData = async () => {
+    let intervalId: NodeJS.Timeout;
+
+    const fetchCow = async () => {
       try {
-        // 1. Fetch Cow Data
         const res = await fetch(
           `http://localhost:8000/api/cows/${cowId}/latest`,
         );
@@ -53,7 +54,7 @@ export default function CowDetail() {
 
         if (res.ok && response.data) {
           const data = response.data;
-          const mappedCow: Cow = {
+          setCow({
             ...data,
             location: {
               lat: data.location?.latitude || 0,
@@ -62,12 +63,7 @@ export default function CowDetail() {
             reading_time: data.reading_time
               ? new Date(data.reading_time).toLocaleString()
               : "Unknown",
-          };
-
-          setCow(mappedCow);
-
-          // 2. Fetch AI Analysis ONLY if we don't have it yet
-          // This 'if (!analysis)' check prevents the loop
+          });
         }
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -75,9 +71,16 @@ export default function CowDetail() {
     };
 
     if (cowId) {
-      getCowData();
+      // Initial fetch
+      fetchCow();
+
+      // Poll every 5 seconds
+      intervalId = setInterval(fetchCow, 2000);
     }
-  }, []); // Add analysis to the dependency array
+
+    // Cleanup: Stop polling when the component unmounts or cowId changes
+    return () => clearInterval(intervalId);
+  }, [cowId]); // Re-run if the cowId changes // Add analysis to the dependency array
 
   const GetAnalysis = async () => {
     // Fetch AI analysis based on cow data
