@@ -31,11 +31,25 @@ export default function IPManager() {
       // 1. GET FROM IP
       const response = await fetch(`http://${ipAddress}/data`);
       const data = await response.json();
+      console.log(data);
+      /*
+      "cow_id",
+      "cow_name",
+      "cow_breed",
+      "cow_dob",
+      "device_id",
+      "temperature",
+      "heartbeat",
+      "activity",
+      "methane_level",
+      
+      */
 
       setStatus("Forwarding...");
 
       // 2. POST TO FIXED API (Passing data directly)
-      const FIXED_API = "https://your-fixed-api.com/endpoint";
+
+      const FIXED_API = `${process.env.NEXT_PUBLIC_BACKEND}/api/sensor-data`;
       await fetch(FIXED_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -60,7 +74,9 @@ export default function IPManager() {
             Live Relay
           </h1>
           <div
-            className={`h-2 w-2 rounded-full ${isLive ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`}
+            className={`h-2 w-2 rounded-full ${
+              isLive ? "bg-emerald-500 animate-pulse" : "bg-red-500"
+            }`}
           />
         </div>
 
