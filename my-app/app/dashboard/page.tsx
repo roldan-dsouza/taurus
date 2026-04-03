@@ -70,29 +70,45 @@ export default function Dashboard() {
       try {
         const res = await fetch("http://localhost:8000/api/cows");
         const response = await res.json();
-        const data = response.data; // Assuming { success, message, data: array }
+        const data = response.data;
 
-        // Map the data to match frontend expectations
-        const mappedCows: Cow[] = data.map((cow: any) => ({
-          ...cow,
-          location: {
-            lat: cow.location?.latitude || 0,
-            lng: cow.location?.longitude || 0,
-          },
-          reading_time: getRelativeTime(cow.reading_time),
-          risk_level: cow.risk_level,
-        }));
-        if (!res.ok) {
-          throw new Error(response.message || "Failed to fetch cows data");
-        }
-        console.log("Fetched cows data:", mappedCows);
+        const mappedCows: Cow[] = data.map((item: any) => {
+          const cowDetails = item.cow;
+          const latestSensor = item.sensorData?.[0] || {};
+
+          // Calculate Age from cow_dob
+          const dob = new Date(cowDetails.cow_dob);
+          const age = new Date().getFullYear() - dob.getFullYear();
+
+          return {
+            cow_id: cowDetails.cow_id,
+            cow_name: cowDetails.cow_name,
+            cow_breed: cowDetails.cow_breed,
+            cow_age: age, // Calculated age
+            device_id: cowDetails.device_id,
+
+            // Sensor metrics from the sensorData array
+            temperature: latestSensor.temperature || 0,
+            heartbeat: latestSensor.heartbeat || 0,
+            activity: latestSensor.activity || 0,
+            methane_level: latestSensor.methane_level || 0,
+
+            location: {
+              lat: item.location?.lat || 0,
+              lng: item.location?.lng || 0,
+            },
+
+            // Fix the NaN issue by using the sensor timestamp
+            reading_time: getRelativeTime(latestSensor.timestamp || new Date()),
+            risk_level: item.risk_level || "Unknown",
+          };
+        });
 
         setCowsData(mappedCows);
       } catch (err) {
         console.error("Error fetching cows data:", err);
       }
     };
-
     fetchCowsData();
   }, []);
 
