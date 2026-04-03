@@ -31,6 +31,7 @@ export default function IPManager() {
       // 1. GET FROM IP
       const response = await fetch(`http://${ipAddress}/data`);
       const data = await response.json();
+      console.log(data);
 
       setStatus("Forwarding...");
 
@@ -60,7 +61,9 @@ export default function IPManager() {
             Live Relay
           </h1>
           <div
-            className={`h-2 w-2 rounded-full ${isLive ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`}
+            className={`h-2 w-2 rounded-full ${
+              isLive ? "bg-emerald-500 animate-pulse" : "bg-red-500"
+            }`}
           />
         </div>
 
