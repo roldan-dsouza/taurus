@@ -72,7 +72,7 @@ export const getAllLatestCowDataService = async () => {
 };
 
 export const getAllDataService = async (cow_id) => {
-  const cow = await Cow.findOne({ cow_id });
+  const cow = await Cow.findOne({ _id: cow_id });
   if (!cow) return null;
 
   const allData = await CowSensorData.find({ cow_id: cow._id })

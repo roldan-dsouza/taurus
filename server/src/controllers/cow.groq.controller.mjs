@@ -15,7 +15,6 @@ export const getAiAnalysis = async (req, res) => {
     //   return sendErrorResponse(res, 404, "No data found for this cow");
     // }
     const cowData = await getAllDataService(cow_id);
-    console.log("Cow data for analysis:", cowData);
     const groqResponse = await getCowHealthReport(cowData);
 
     sendSuccessResponse(res, 200, "Successful", groqResponse);
