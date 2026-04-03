@@ -26,6 +26,7 @@ interface Cow {
   reading_time: string;
 }
 
+let text = [""];
 export default function CowDetail() {
   const router = useRouter();
   const params = useParams();

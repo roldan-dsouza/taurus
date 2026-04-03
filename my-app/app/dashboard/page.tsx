@@ -59,6 +59,10 @@ function getBadgeColor(riskLevel: string) {
 }
 
 export default function Dashboard() {
+  const [textContent, setTextContent] = useState([
+    " Cow Monitor",
+    "Your farm's health at a glance",
+  ]);
   const [cowsData, setCowsData] = useState<Cow[]>([]);
 
   useEffect(() => {
@@ -101,17 +105,17 @@ export default function Dashboard() {
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-3xl font-bold text-emerald-900 mb-0.5">
-                Cow Monitor
+                {textContent[0]}
               </h1>
-              <p className="text-emerald-700 text-sm">
-                Your farm's health at a glance
-              </p>
+              <p className="text-emerald-700 text-sm">{textContent[1]}</p>
             </div>
             <div className="text-right bg-gradient-to-br from-emerald-100 to-green-100 rounded-2xl px-4 py-2 border border-emerald-200">
               <div className="text-3xl font-bold text-emerald-900">
                 {cowsData.length}
               </div>
-              <div className="text-emerald-700 font-medium">Total Cows</div>
+              <div className="text-emerald-700 font-medium">
+                {textContent[2]}
+              </div>
             </div>
           </div>
 
