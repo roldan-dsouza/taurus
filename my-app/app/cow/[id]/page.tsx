@@ -226,7 +226,7 @@ export default function CowDetail() {
                   Activity Level
                 </div>
                 <div className="text-5xl sm:text-6xl font-bold text-gray-900 mb-2">
-                  {cow.activity}%
+                  {cow.activity}
                 </div>
                 <div className="text-blue-700 font-semibold">
                   Movement & Motion
