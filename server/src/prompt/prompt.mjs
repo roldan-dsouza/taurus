@@ -299,13 +299,19 @@ const scorePattern = (stats, pattern) => {
   return ((matched / params.length) * pattern.weight).toFixed(3);
 };
 
-const rankDiseaseMatches = (stats) =>
-  DISEASE_PATTERNS.map((d) => ({
+const rankDiseaseMatches = (stats) => {
+  const MINIMUM_MATCH_THRESHOLD = 0.7; // at least ~3 of 4 parameters must match
+
+  const matches = DISEASE_PATTERNS.map((d) => ({
     name: d.name,
     matchScore: parseFloat(scorePattern(stats, d)),
   }))
+    .filter((d) => d.matchScore >= MINIMUM_MATCH_THRESHOLD) // drop weak matches
     .sort((a, b) => b.matchScore - a.matchScore)
-    .slice(0, 3); // top 3 candidates passed to Groq
+    .slice(0, 3);
+
+  return matches; // may be empty — that's correct for a healthy cow
+};
 
 // ─── Main stats builder ───────────────────────────────────────────────────────
 
@@ -330,8 +336,7 @@ const buildStats = (temperature, heartbeat, activity, methane_level) => {
 
   const riskScore = parseFloat(compositeRiskScore(stats));
   const riskBand = riskScore < 20 ? "Low" : riskScore < 50 ? "Medium" : "High";
-
-  const topMatches = rankDiseaseMatches(stats);
+  const topMatches = rankDiseaseMatches(stats); // now filtered
 
   return { stats, riskScore, riskBand, topMatches };
 };
@@ -362,14 +367,16 @@ const prompt = (
     })
     .join("\n");
 
-  const matchLines = topMatches
-    .map(
-      (m, i) =>
-        `  ${i + 1}. ${m.name} — pattern match score: ${(m.matchScore * 100).toFixed(1)}%`,
-    )
-    .join("\n");
+  // CHANGED: show "No conditions met threshold" instead of always showing matches
+  const matchLines = topMatches.length
+    ? topMatches
+        .map(
+          (m, i) =>
+            `  ${i + 1}. ${m.name} — pattern match score: ${(m.matchScore * 100).toFixed(1)}%`,
+        )
+        .join("\n")
+    : "  No conditions met the minimum pattern match threshold (70%).\n  This is consistent with a healthy animal.";
 
-  // Only include the trend block if we have history
   const trendBlock = trendSummary
     ? `
 ════════════════════════════════════════════
@@ -378,10 +385,7 @@ const prompt = (
 
 ${trendSummary}
 
-  Use this to determine if the cow's condition is:
-  • Improving  — abnormal values moving back toward normal ranges
-  • Stable     — values not changing significantly
-  • Worsening  — abnormal values moving further from normal ranges
+  Use this to determine if the cow's condition is improving, stable, or worsening.
   A worsening trend on an already-abnormal reading should raise your Risk_Level.
   An improving trend may justify a lower Risk_Level than the snapshot alone suggests.
 `
@@ -408,17 +412,15 @@ ${trendBlock}
   YOUR CLINICAL TASK
 ════════════════════════════════════════════
 
-You must reason through the data in three steps before producing output:
-
 STEP 1 — PARAMETER INTERACTION ANALYSIS
   Examine how the four parameters interact, not just in isolation.
   Key interaction signatures to consider:
-  • Fever + tachycardia + low activity                  → systemic infection triad
-  • High methane + tachycardia + low activity           → rumen bloat / tympany
-  • Low temp + bradycardia + very low activity          → metabolic collapse (ketosis / milk fever)
-  • High temp + tachycardia + high activity             → heat stress or grass tetany (agitation phase)
-  • Very low activity + mild fever + normal methane     → pain-based condition (lameness, FMD, hardware disease)
-  • Low methane + tachycardia + low activity            → ruminal acidosis or BVD (off-feed)
+  • Fever + tachycardia + low activity                    → systemic infection triad
+  • High methane + tachycardia + low activity             → rumen bloat / tympany
+  • Low temp + bradycardia + very low activity            → metabolic collapse (ketosis / milk fever)
+  • High temp + tachycardia + high activity               → heat stress or grass tetany (agitation phase)
+  • Very low activity + mild fever + normal methane       → pain-based condition (lameness, FMD, hardware disease)
+  • Low methane + tachycardia + low activity              → ruminal acidosis or BVD (off-feed)
   • Critically low temp + bradycardia + very low activity → hypothermia
 
 STEP 2 — VALIDATE OR CHALLENGE THE PATTERN MATCHES
@@ -429,20 +431,20 @@ STEP 2 — VALIDATE OR CHALLENGE THE PATTERN MATCHES
   Factor in the trend data — a worsening pattern increases diagnostic confidence.
 
 STEP 3 — ASSIGN RISK AND PRODUCE OUTPUT
-  Hard rules you must follow:
-  • If ALL parameters are within 1 standard deviation of normal → Risk_Level MUST be "Low".
+  Hard rules — you MUST follow all of these:
+
+  • If ALL z-scores are below 1.0 (all "normal" severity) → Risk_Level MUST be "Low"
+    and possible_disease MUST be "None detected".
+  • If Composite_Risk_Score is below 20 → possible_disease MUST be "None detected".
+  • If no conditions met the pattern match threshold → possible_disease MUST be "None detected"
+    unless you have an exceptionally strong clinical reason based on parameter interactions alone.
   • If ANY parameter breaches a critical threshold (marked ⚠ above) → Risk_Level CANNOT be "Low".
   • You may override the algorithmic band (${riskBand}) only if you state a clear clinical reason.
-  • "possible_disease" → single most clinically plausible condition given all four parameters together.
-  • "differential_diagnosis" → next most plausible; use "None" only if truly no alternative fits.
-  • "reason" → must reference at least two specific z-scores or parameter interactions. Two sentences maximum.
-  • "recommendation" → numbered, prioritised action steps. No generic advice. Tell the farmer exactly what to do first.
+  • "reason" must reference at least two specific z-scores or parameter interactions.
+  • "recommendation" must be concrete and prioritised — for a healthy cow this should be
+    "Continue routine monitoring. No intervention required at this time."
 
-IMPORTANT:
-- Return ONLY valid JSON
-- Do NOT include numbering like 1., 2., etc.
-- Arrays must contain only plain strings
-- No markdown, no explanation, no backticks
+Respond ONLY with the following valid JSON object. No markdown, no preamble, no trailing text.
 
 {
   "Risk_Level": "Low | Medium | High",
@@ -456,7 +458,7 @@ IMPORTANT:
     "methane_level": "${stats.methane_level.direction} (${stats.methane_level.severity})"
   },
   "reason": "Two sentences maximum. Must cite at least two z-scores or parameter interactions.",
-  "recommendation": "Numbered, prioritised action list for the farmer."
+  "recommendation": "Numbered, prioritised action list for the farmer. For healthy cows: routine monitoring only."
 }`;
 };
 

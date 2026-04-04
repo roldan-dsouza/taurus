@@ -30,7 +30,7 @@ export const getCowHealthReport = async ({ cow, latest, history }) => {
   const response = await groq.chat.completions.create({
     model: "llama-3.3-70b-versatile",
     messages: [{ role: "system", content }],
-    max_tokens: 1000,
+    max_tokens: 2000,
   });
 
   // ✅ Move parsing HERE
