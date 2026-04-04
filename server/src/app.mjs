@@ -6,6 +6,7 @@ dotenv.config();
 import cors from "cors";
 import morgan from "morgan";
 import cowRoutes from "./routes/cow.route.mjs";
+import { startCronJobs } from "./cron/cron.analysis.mjs";
 
 const app = express();
 
@@ -22,6 +23,7 @@ console.log("CORS Origins:", process.env.FRONTEND_DOMAIN);
 app.use(cors(corsOptions));
 app.use(morgan("dev"));
 app.use(express.json());
+startCronJobs();
 
 // Routes
 app.use("/api/cows", cowRoutes);

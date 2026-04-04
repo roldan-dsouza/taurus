@@ -12,7 +12,7 @@ const cowReportSchema = new mongoose.Schema(
     report_details_history: [
       {
         type: mongoose.Schema.Types.Mixed, // stores the full report details as returned by Groq, can be structured further if needed
-        slice: -5, // keep only the latest 5 reports in history to prevent unbounded growth, adjust as needed
+        slice: -1, // keep only the latest report in history to prevent unbounded growth, adjust as needed
       },
     ],
   },

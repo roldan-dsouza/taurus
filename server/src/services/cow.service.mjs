@@ -82,3 +82,23 @@ export const getAllDataService = async (cow_id) => {
     .lean();
   return allData || null;
 };
+
+export const getCowDataWithHistory = async (cow_id, historyLimit = 5) => {
+  const cow = await Cow.findById({ _id: cow_id }); // query by string cow_id, not _id
+  if (!cow) return null;
+
+  const readings = await CowSensorData.find({ cow_id: cow._id })
+    .sort({ reading_time: -1 })
+    .limit(historyLimit + 1) // +1 so index 0 is latest, 1..N are history
+    .lean();
+
+  if (!readings.length) return null;
+
+  const [latest, ...history] = readings;
+
+  return {
+    cow, // full cow profile (breed, dob, etc.)
+    latest, // the single reading Groq analyses
+    history, // previous readings for trend context
+  };
+};
