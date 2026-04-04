@@ -72,7 +72,7 @@ export default function GaumitraLanding() {
           </div>
           <Link
             href="/dashboard"
-            className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-emerald-700 transition shadow-md"
+            className=" mr-16 bg-emerald-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-emerald-700 transition shadow-md"
           >
             Dashboard
           </Link>

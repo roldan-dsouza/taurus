@@ -33,11 +33,11 @@ export default function IPManager() {
       const data = await response.json();
       console.log(data);
       const dataToSend = {
-        cow_id: "COW108",
-        cow_name: "Nidhi",
+        cow_id: "COW188",
+        cow_name: "Bessie",
         cow_breed: "Desi",
         cow_dob: "2015-06-15",
-        device_id: "dev108",
+        device_id: "dev188",
         temperature: data.temperature,
         heartbeat: data.bpm - 5,
         activity: data.intensity,
