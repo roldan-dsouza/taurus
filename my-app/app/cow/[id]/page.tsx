@@ -34,6 +34,24 @@ export default function CowDetail() {
   const [cow, setCow] = useState<Cow | null>(null);
   const [analysis, setAnalysis] = useState<any>(null);
 
+  const [coords, setCoords] = useState<{
+    lat: number | null;
+    lng: number | null;
+  }>({ lat: null, lng: null });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      navigator.geolocation.getCurrentPosition((p) => {
+        setCoords({
+          lat: p.coords.latitude,
+          lng: p.coords.longitude,
+        });
+      });
+    }, 5000);
+
+    return () => clearInterval(interval); // cleanup
+  }, []);
+
   const searchParams = useSearchParams();
 
   const name = searchParams.get("name");
@@ -51,6 +69,7 @@ export default function CowDetail() {
           `http://localhost:8000/api/cows/${cowId}/latest`,
         );
         const response = await res.json();
+        console.log("Fetched cow data:", response);
 
         if (res.ok && response.data) {
           const data = response.data;
@@ -84,6 +103,7 @@ export default function CowDetail() {
 
   const GetAnalysis = async () => {
     // Fetch AI analysis based on cow data
+    console.log("Fetching AI analysis for cowId:", cowId);
     if (!analysis) {
       const analysisRes = await fetch(
         `http://localhost:8000/api/cows/analyze/${cowId}`,
@@ -115,7 +135,7 @@ export default function CowDetail() {
             Cow Not Found
           </h1>
           <button
-            onClick={() => router.back()}
+            onClick={() => window.history.back()}
             className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold text-lg hover:bg-emerald-700 transition shadow-lg"
           >
             Go Back
@@ -276,15 +296,29 @@ export default function CowDetail() {
                 Location
               </div>
               <div className="text-3xl font-bold text-gray-900 mb-2">
-                {cow?.location?.lat?.toFixed(4)}°N
+                {coords.lat != null
+                  ? `${coords.lat.toFixed(4)}°N`
+                  : "Loading..."}
               </div>
+
               <div className="text-2xl font-bold text-gray-900 mb-4">
-                {Math.abs(cow.location.lng).toFixed(4)}°W
+                {coords.lng != null
+                  ? `${coords.lng.toFixed(4)}°W`
+                  : "Loading..."}
               </div>
               <div className="text-sm text-gray-600">
-                Latitude: {cow.location.lat.toFixed(4)} • Longitude:{" "}
-                {cow.location.lng.toFixed(4)}
+                Latitude: {coords?.lat?.toFixed(4)} • Longitude:{" "}
+                {coords?.lng?.toFixed(4)}
               </div>
+
+              <iframe
+                width="100%"
+                height="400"
+                style={{ border: 0 }}
+                loading="lazy"
+                allowFullScreen
+                src={`https://maps.google.com/maps?q=${coords?.lat?.toFixed(4)},${coords?.lng?.toFixed(4)}&z=15&output=embed`}
+              />
             </div>
           </div>
         </div>

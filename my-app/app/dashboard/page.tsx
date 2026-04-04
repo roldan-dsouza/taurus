@@ -81,6 +81,7 @@ export default function Dashboard() {
           const dob = new Date(cowDetails.cow_dob);
           const age = new Date().getFullYear() - dob.getFullYear();
           console.log(cowDetails._id);
+
           return {
             _id: cowDetails._id,
             cow_id: cowDetails.cow_id,
@@ -105,6 +106,7 @@ export default function Dashboard() {
             risk_level: item.risk_level || "Unknown",
           };
         });
+        console.log(mappedCows);
 
         setCowsData(mappedCows);
       } catch (err) {
@@ -123,20 +125,19 @@ export default function Dashboard() {
       {/* Header */}
       <header className="border-b border-emerald-200 bg-white/70 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-emerald-900 mb-0.5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-emerald-900 mb-0.5 truncate">
                 {textContent[0]}
               </h1>
               <p className="text-emerald-700 text-sm">{textContent[1]}</p>
-            </div>
-            <div className="text-right bg-gradient-to-br from-emerald-100 to-green-100 rounded-2xl px-4 py-2 border border-emerald-200">
-              <div className="text-3xl font-bold text-emerald-900">
+              <div className="flex-shrink-0 w-16 flex items-center justify-center bg-gradient-to-br from-emerald-100 to-green-100 rounded-2xl px-3 py-2 sm:px-4 border border-emerald-200 text-2xl sm:text-3xl font-bold text-emerald-900 tabular-nums">
                 {cowsData.length}
               </div>
-              <div className="text-emerald-700 font-medium">
-                {textContent[2]}
-              </div>
+            </div>
+
+            <div className="text-emerald-700 font-medium text-xs sm:text-sm whitespace-nowrap">
+              {textContent[2]}
             </div>
           </div>
 
