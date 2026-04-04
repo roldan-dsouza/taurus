@@ -1,56 +1,6 @@
-// // server/src/prompt/prompt.mjs
-
-// const prompt = (
-//   temperature,
-//   heartbeat,
-//   activity,
-//   methane_level,
-// ) => `You are an expert AI veterinary assistant specializing in cattle health. Your task is to analyze real-time sensor data from a cow's smart collar and provide a diagnostic assessment.
-
-// **Normal Reference Ranges for Healthy Cattle:**
-// - Body Temperature: 38.0°C – 39.3°C
-// - Heart Rate: 48 – 84 bpm (beats per minute)
-// - Activity Level: Categorized as "active" (grazing/walking), "resting" (standing/lying), or "low" (unusually still/lethargic)
-// - Methane Level (as indicator of bloat/rumen health): Normal < 200 ppm; Elevated 200–500 ppm; High > 500 ppm (risk of bloat)
-
-// **Current Sensor Readings:**
-// - Temperature: ${temperature} °C
-// - Heartbeat: ${heartbeat} bpm
-// - Activity Level: ${activity}
-// - Methane Level: ${methane_level} ppm
-
-// **Instructions:**
-// 1. Compare each reading against the normal ranges.
-// 2. Identify any abnormal values and consider possible combinations that indicate specific conditions (e.g., fever + elevated heart rate + reduced activity → possible infection).
-// 3. Consider these common diseases/conditions: Mastitis, Ketosis, Respiratory Infection, Digestive Disorder (including bloat), Heat Stress, or General Infection.
-// 4. Assign a risk level (Low, Medium, High) based on severity and urgency.
-// 5. Provide a clear reason explaining why you suspect that disease.
-// 6. Give practical recommendations for the farmer (e.g., "Check udder for swelling", "Isolate and monitor", "Consult veterinarian immediately").
-
-// **Output Format:**
-// Respond **only** with a valid JSON object (no additional text, markdown, or explanation). Use the following structure exactly:
-
-// {
-//   "Risk_Level": "Low/Medium/High",
-//   "possible_disease": "Name of suspected condition or 'None'",
-//   "reason": "Brief explanation based on sensor data",
-//   "recommendation": "Actionable advice for the farmer"
-// }
-
-// **Examples:**
-// - If temperature is 39.8°C, heart rate 95 bpm, activity "low", methane 150 ppm → possible respiratory infection.
-// - If methane is 650 ppm, activity "resting", temperature normal → high bloat risk.
-
-// Now, analyze the given data and produce the JSON output.`;
-// export default prompt;
-
 // server/src/prompt/prompt.mjs
+// This module defines the prompt template and the statistical analysis logic for interpreting cow sensor data.
 
-/**
- * Normal reference ranges for healthy cattle.
- * Each parameter includes mean, standard deviation, and clinical thresholds
- * derived from standard veterinary literature.
- */
 const CATTLE_NORMS = {
   temperature: {
     mean: 38.65, // °C
@@ -71,12 +21,10 @@ const CATTLE_NORMS = {
     unit: "bpm",
   },
   activity: {
-    // Activity is scored 0–100 by many collar sensors.
-    // We treat it as a continuous value for z-score purposes.
     mean: 55,
     sd: 20,
-    low: 20, // lethargic threshold
-    high: 90, // hyperactive/agitated threshold
+    low: 20,
+    high: 90,
     critical_low: 5,
     critical_high: 100,
     unit: "units",
@@ -85,25 +33,17 @@ const CATTLE_NORMS = {
     mean: 120, // ppm — resting healthy cow
     sd: 40,
     low: 0,
-    high: 200, // elevated starts here
+    high: 200,
     critical_low: 0,
-    critical_high: 500, // bloat risk
+    critical_high: 500,
     unit: "ppm",
   },
 };
 
 // ─── Statistical helpers ──────────────────────────────────────────────────────
 
-/**
- * Compute z-score: how many standard deviations a reading is from the mean.
- * Positive = above mean, negative = below mean.
- */
 const zScore = (value, mean, sd) => ((value - mean) / sd).toFixed(2);
 
-/**
- * Classify deviation severity based on z-score magnitude.
- * Returns one of: "normal", "mild", "moderate", "severe", "critical"
- */
 const deviationSeverity = (z) => {
   const abs = Math.abs(z);
   if (abs < 1.0) return "normal";
@@ -113,48 +53,22 @@ const deviationSeverity = (z) => {
   return "critical";
 };
 
-/**
- * Determine direction of deviation: "elevated", "depressed", or "normal"
- */
 const deviationDirection = (value, norm) => {
   if (value > norm.high) return "elevated";
   if (value < norm.low) return "depressed";
   return "normal";
 };
 
-/**
- * Express a value as a percentile position within the normal range.
- * Values outside [low, high] will be < 0% or > 100%.
- */
 const rangePercentile = (value, norm) => {
   const span = norm.high - norm.low;
   return (((value - norm.low) / span) * 100).toFixed(1);
 };
 
-/**
- * Check if value breaches a critical threshold (beyond the abnormal range).
- */
 const isCritical = (value, norm) =>
   value <= norm.critical_low || value >= norm.critical_high;
 
 // ─── Composite risk scoring ───────────────────────────────────────────────────
 
-/**
- * Weighted composite risk score (0–100).
- *
- * Weights reflect clinical importance to overall cattle health:
- *   temperature    — 35%  (fever/hypothermia is the strongest infection signal)
- *   heartbeat      — 25%  (circulatory stress indicator)
- *   activity       — 20%  (behavioural change is an early warning sign)
- *   methane_level  — 20%  (bloat/rumen health specific)
- *
- * Each parameter contributes a score of 0–25 (scaled by weight):
- *   |z| < 1   → 0 points (normal)
- *   |z| 1–1.5 → 25% of weight (mild)
- *   |z| 1.5–2 → 50% of weight (moderate)
- *   |z| 2–3   → 75% of weight (severe)
- *   |z| ≥ 3   → 100% of weight (critical)
- */
 const WEIGHTS = {
   temperature: 0.35,
   heartbeat: 0.25,
@@ -180,16 +94,10 @@ const compositeRiskScore = (stats) => {
 
 // ─── Known disease pattern matching ──────────────────────────────────────────
 
-/**
- * Each pattern describes the expected deviation profile for a condition.
- * A "match score" is computed by how closely the readings fit the pattern.
- *
- * direction: "elevated" | "depressed" | "any" | "normal"
- * severity:  minimum severity level to trigger ("mild" | "moderate" | "severe")
- */
 const DISEASE_PATTERNS = [
+  // ── Respiratory ────────────────────────────────────────────────────────────
   {
-    name: "Respiratory Infection",
+    name: "Respiratory Infection (Pneumonia / BRD)",
     patterns: {
       temperature: { direction: "elevated", minSeverity: "mild" },
       heartbeat: { direction: "elevated", minSeverity: "mild" },
@@ -198,6 +106,8 @@ const DISEASE_PATTERNS = [
     },
     weight: 1.0,
   },
+
+  // ── Rumen / Digestive ──────────────────────────────────────────────────────
   {
     name: "Bloat (Ruminal Tympany)",
     patterns: {
@@ -206,10 +116,36 @@ const DISEASE_PATTERNS = [
       activity: { direction: "depressed", minSeverity: "mild" },
       methane_level: { direction: "elevated", minSeverity: "moderate" },
     },
-    weight: 1.2, // bloat is acutely dangerous — upweight
+    weight: 1.2, // acutely life-threatening — upweighted
   },
   {
-    name: "Ketosis",
+    name: "Acidosis (Ruminal)",
+    // Grain overload → excess acid → methanogens suppressed → low methane,
+    // elevated HR from pain/toxaemia, very low activity
+    patterns: {
+      temperature: { direction: "normal" },
+      heartbeat: { direction: "elevated", minSeverity: "mild" },
+      activity: { direction: "depressed", minSeverity: "moderate" },
+      methane_level: { direction: "depressed", minSeverity: "mild" },
+    },
+    weight: 1.1,
+  },
+  {
+    name: "Hardware Disease (Traumatic Reticuloperitonitis)",
+    // Swallowed metal punctures reticulum → peritonitis → grunt on movement,
+    // mild fever, elevated HR from pain, severely depressed activity
+    patterns: {
+      temperature: { direction: "elevated", minSeverity: "mild" },
+      heartbeat: { direction: "elevated", minSeverity: "mild" },
+      activity: { direction: "depressed", minSeverity: "severe" },
+      methane_level: { direction: "normal" },
+    },
+    weight: 1.0,
+  },
+
+  // ── Metabolic ──────────────────────────────────────────────────────────────
+  {
+    name: "Ketosis (Acetonaemia)",
     patterns: {
       temperature: { direction: "depressed", minSeverity: "mild" },
       heartbeat: { direction: "depressed", minSeverity: "mild" },
@@ -219,25 +155,31 @@ const DISEASE_PATTERNS = [
     weight: 1.0,
   },
   {
-    name: "Heat Stress",
+    name: "Hypocalcaemia (Milk Fever)",
+    // Post-calving calcium crash → recumbency, cold extremities,
+    // very low HR (bradycardia), very low activity, methane normal (rumen still working)
     patterns: {
-      temperature: { direction: "elevated", minSeverity: "moderate" },
-      heartbeat: { direction: "elevated", minSeverity: "mild" },
-      activity: { direction: "depressed", minSeverity: "mild" },
+      temperature: { direction: "depressed", minSeverity: "mild" },
+      heartbeat: { direction: "depressed", minSeverity: "moderate" },
+      activity: { direction: "depressed", minSeverity: "severe" },
+      methane_level: { direction: "normal" },
+    },
+    weight: 1.1,
+  },
+  {
+    name: "Hypomagnesaemia (Grass Tetany)",
+    // Low magnesium → muscle tremors and agitation before collapse;
+    // elevated HR and initially elevated activity (excitable phase)
+    patterns: {
+      temperature: { direction: "normal" },
+      heartbeat: { direction: "elevated", minSeverity: "moderate" },
+      activity: { direction: "elevated", minSeverity: "mild" },
       methane_level: { direction: "normal" },
     },
     weight: 1.0,
   },
-  {
-    name: "Mastitis",
-    patterns: {
-      temperature: { direction: "elevated", minSeverity: "mild" },
-      heartbeat: { direction: "elevated", minSeverity: "mild" },
-      activity: { direction: "depressed", minSeverity: "mild" },
-      methane_level: { direction: "normal" },
-    },
-    weight: 0.9, // similar to respiratory — slightly lower confidence without udder data
-  },
+
+  // ── Infectious / Systemic ──────────────────────────────────────────────────
   {
     name: "General Infection / Septicaemia",
     patterns: {
@@ -247,6 +189,82 @@ const DISEASE_PATTERNS = [
       methane_level: { direction: "any" },
     },
     weight: 1.1,
+  },
+  {
+    name: "Mastitis",
+    // Udder infection → systemic fever + HR spike + lethargy;
+    // methane normal unless animal is completely off-feed
+    patterns: {
+      temperature: { direction: "elevated", minSeverity: "mild" },
+      heartbeat: { direction: "elevated", minSeverity: "mild" },
+      activity: { direction: "depressed", minSeverity: "mild" },
+      methane_level: { direction: "normal" },
+    },
+    weight: 0.9, // lower confidence without udder palpation data
+  },
+  {
+    name: "Foot-and-Mouth Disease (FMD)",
+    // Vesicular lesions → very high fever, extreme reluctance to move (pain),
+    // tachycardia from fever/pain, methane normal
+    patterns: {
+      temperature: { direction: "elevated", minSeverity: "moderate" },
+      heartbeat: { direction: "elevated", minSeverity: "mild" },
+      activity: { direction: "depressed", minSeverity: "severe" },
+      methane_level: { direction: "normal" },
+    },
+    weight: 1.15,
+  },
+  {
+    name: "Bovine Viral Diarrhoea (BVD)",
+    // Mucosal disease → fever, dullness, reduced rumen motility and feed intake
+    // → low methane from off-feed; elevated HR from infection
+    patterns: {
+      temperature: { direction: "elevated", minSeverity: "mild" },
+      heartbeat: { direction: "elevated", minSeverity: "mild" },
+      activity: { direction: "depressed", minSeverity: "moderate" },
+      methane_level: { direction: "depressed", minSeverity: "mild" },
+    },
+    weight: 1.0,
+  },
+
+  // ── Environmental ──────────────────────────────────────────────────────────
+  {
+    name: "Heat Stress",
+    // High ambient temperature → elevated body temp and tachycardia + lethargy;
+    // methane often drops because feed intake falls in heat
+    patterns: {
+      temperature: { direction: "elevated", minSeverity: "moderate" },
+      heartbeat: { direction: "elevated", minSeverity: "mild" },
+      activity: { direction: "depressed", minSeverity: "mild" },
+      methane_level: { direction: "normal" },
+    },
+    weight: 1.0,
+  },
+  {
+    name: "Hypothermia / Cold Stress",
+    // Prolonged cold exposure → shivering then depression,
+    // sub-normal temperature, bradycardia, very low activity
+    patterns: {
+      temperature: { direction: "depressed", minSeverity: "moderate" },
+      heartbeat: { direction: "depressed", minSeverity: "mild" },
+      activity: { direction: "depressed", minSeverity: "moderate" },
+      methane_level: { direction: "normal" },
+    },
+    weight: 1.0,
+  },
+
+  // ── Pain / Musculoskeletal ─────────────────────────────────────────────────
+  {
+    name: "Lameness / Musculoskeletal Pain",
+    // Chronic pain → mild tachycardia (pain response), severely reduced movement,
+    // normal temperature unless secondary infection, normal methane
+    patterns: {
+      temperature: { direction: "normal" },
+      heartbeat: { direction: "elevated", minSeverity: "mild" },
+      activity: { direction: "depressed", minSeverity: "severe" },
+      methane_level: { direction: "normal" },
+    },
+    weight: 0.95,
   },
 ];
 
@@ -258,10 +276,6 @@ const SEVERITY_RANK = {
   critical: 4,
 };
 
-/**
- * Score how well the observed stats match a disease pattern (0–1).
- * Each matching parameter adds (1 / total_params) to the score.
- */
 const scorePattern = (stats, pattern) => {
   const params = Object.keys(pattern.patterns);
   let matched = 0;
@@ -285,23 +299,16 @@ const scorePattern = (stats, pattern) => {
   return ((matched / params.length) * pattern.weight).toFixed(3);
 };
 
-/**
- * Return the top 2 disease matches sorted by score descending.
- */
 const rankDiseaseMatches = (stats) =>
   DISEASE_PATTERNS.map((d) => ({
     name: d.name,
     matchScore: parseFloat(scorePattern(stats, d)),
   }))
     .sort((a, b) => b.matchScore - a.matchScore)
-    .slice(0, 2);
+    .slice(0, 3); // top 3 candidates passed to Groq
 
 // ─── Main stats builder ───────────────────────────────────────────────────────
 
-/**
- * Build a full statistical profile for all four sensor readings.
- * This is the single source of truth passed into the prompt.
- */
 const buildStats = (temperature, heartbeat, activity, methane_level) => {
   const readings = { temperature, heartbeat, activity, methane_level };
 
@@ -331,7 +338,13 @@ const buildStats = (temperature, heartbeat, activity, methane_level) => {
 
 // ─── Prompt generator ─────────────────────────────────────────────────────────
 
-const prompt = (temperature, heartbeat, activity, methane_level) => {
+const prompt = (
+  temperature,
+  heartbeat,
+  activity,
+  methane_level,
+  trendSummary = null,
+) => {
   const { stats, riskScore, riskBand, topMatches } = buildStats(
     temperature,
     heartbeat,
@@ -339,7 +352,6 @@ const prompt = (temperature, heartbeat, activity, methane_level) => {
     methane_level,
   );
 
-  // Format per-parameter statistical block for the prompt
   const statLines = Object.entries(stats)
     .map(([param, s]) => {
       const critFlag = s.isCritical ? " ⚠ CRITICAL THRESHOLD BREACHED" : "";
@@ -357,10 +369,31 @@ const prompt = (temperature, heartbeat, activity, methane_level) => {
     )
     .join("\n");
 
-  return `You are an expert AI veterinary assistant specialising in cattle health monitoring. You will receive pre-computed statistical sensor analysis from a smart collar and must produce a precise clinical assessment.
+  // Only include the trend block if we have history
+  const trendBlock = trendSummary
+    ? `
+════════════════════════════════════════════
+  HISTORICAL TREND (previous readings)
+════════════════════════════════════════════
+
+${trendSummary}
+
+  Use this to determine if the cow's condition is:
+  • Improving  — abnormal values moving back toward normal ranges
+  • Stable     — values not changing significantly
+  • Worsening  — abnormal values moving further from normal ranges
+  A worsening trend on an already-abnormal reading should raise your Risk_Level.
+  An improving trend may justify a lower Risk_Level than the snapshot alone suggests.
+`
+    : `
+  (No historical readings available — assessment based on current snapshot only.)
+`;
+
+  return `You are a senior cattle veterinarian with 20 years of field experience and deep knowledge of bovine physiology. You are reviewing real-time smart-collar data that has already been statistically processed. Your assessment will be acted on directly by a farmer — precision and clinical honesty matter more than caution.
 
 ════════════════════════════════════════════
   PRE-COMPUTED STATISTICAL ANALYSIS
+  (single latest collar reading)
 ════════════════════════════════════════════
 
 ${statLines}
@@ -368,49 +401,64 @@ ${statLines}
   Composite Risk Score : ${riskScore} / 100 (band: ${riskBand})
   (Weighted: temperature 35%, heartbeat 25%, activity 20%, methane 20%)
 
-  Top pattern-matched conditions (algorithmic, not final diagnosis):
+  Top algorithmic pattern matches (scored against 14 known bovine conditions):
 ${matchLines}
-
+${trendBlock}
 ════════════════════════════════════════════
   YOUR CLINICAL TASK
 ════════════════════════════════════════════
 
-Using the statistical context above:
+You must reason through the data in three steps before producing output:
 
-1. **Validate or challenge** the pattern-matched conditions using clinical reasoning.
-   Do not simply accept them — explain whether the combination of deviations makes
-   biological sense for each candidate condition.
+STEP 1 — PARAMETER INTERACTION ANALYSIS
+  Examine how the four parameters interact, not just in isolation.
+  Key interaction signatures to consider:
+  • Fever + tachycardia + low activity                  → systemic infection triad
+  • High methane + tachycardia + low activity           → rumen bloat / tympany
+  • Low temp + bradycardia + very low activity          → metabolic collapse (ketosis / milk fever)
+  • High temp + tachycardia + high activity             → heat stress or grass tetany (agitation phase)
+  • Very low activity + mild fever + normal methane     → pain-based condition (lameness, FMD, hardware disease)
+  • Low methane + tachycardia + low activity            → ruminal acidosis or BVD (off-feed)
+  • Critically low temp + bradycardia + very low activity → hypothermia
 
-2. **Identify interactions** between parameters. For example:
-   - Elevated temperature + elevated heart rate + low activity is a fever-infection triad.
-   - High methane + depressed activity + normal temperature points to rumen dysfunction.
-   - Low temperature + low heart rate + low activity is a metabolic (ketosis/hypocalcaemia) profile.
+STEP 2 — VALIDATE OR CHALLENGE THE PATTERN MATCHES
+  Do not blindly accept the algorithmic matches.
+  Ask: does this combination of z-scores and parameter directions make physiological sense
+  for each candidate? If a high-scoring match is implausible given the full picture,
+  say so in the reason field. Prefer the most specific diagnosis over a vague one.
+  Factor in the trend data — a worsening pattern increases diagnostic confidence.
 
-3. **Assign a final Risk_Level** (Low / Medium / High). You may adjust from the
-   algorithmic band (${riskBand}) if clinical reasoning warrants it — but you must
-   justify any adjustment in the "reason" field.
+STEP 3 — ASSIGN RISK AND PRODUCE OUTPUT
+  Hard rules you must follow:
+  • If ALL parameters are within 1 standard deviation of normal → Risk_Level MUST be "Low".
+  • If ANY parameter breaches a critical threshold (marked ⚠ above) → Risk_Level CANNOT be "Low".
+  • You may override the algorithmic band (${riskBand}) only if you state a clear clinical reason.
+  • "possible_disease" → single most clinically plausible condition given all four parameters together.
+  • "differential_diagnosis" → next most plausible; use "None" only if truly no alternative fits.
+  • "reason" → must reference at least two specific z-scores or parameter interactions. Two sentences maximum.
+  • "recommendation" → numbered, prioritised action steps. No generic advice. Tell the farmer exactly what to do first.
 
-4. **Produce only a valid JSON object** with this exact structure:
+IMPORTANT:
+- Return ONLY valid JSON
+- Do NOT include numbering like 1., 2., etc.
+- Arrays must contain only plain strings
+- No markdown, no explanation, no backticks
 
 {
   "Risk_Level": "Low | Medium | High",
   "Composite_Risk_Score": ${riskScore},
-  "possible_disease": "Most likely condition, or 'None detected'",
-  "differential_diagnosis": "Second most likely condition, or 'None'",
+  "possible_disease": "Most clinically plausible condition, or 'None detected'",
+  "differential_diagnosis": "Second most plausible condition, or 'None'",
   "parameter_flags": {
     "temperature": "${stats.temperature.direction} (${stats.temperature.severity})",
     "heartbeat": "${stats.heartbeat.direction} (${stats.heartbeat.severity})",
     "activity": "${stats.activity.direction} (${stats.activity.severity})",
     "methane_level": "${stats.methane_level.direction} (${stats.methane_level.severity})"
   },
-  "reason": "One-to-two sentence clinical explanation referencing specific z-scores and parameter interactions.",
-  "recommendation": "Concrete, prioritised actions for the farmer."
-}
-
-Output the JSON only — no markdown, no surrounding text.`;
+  "reason": "Two sentences maximum. Must cite at least two z-scores or parameter interactions.",
+  "recommendation": "Numbered, prioritised action list for the farmer."
+}`;
 };
 
 export default prompt;
-
-// ─── Named export for direct use in pre-processing / logging ─────────────────
 export { buildStats, CATTLE_NORMS };
