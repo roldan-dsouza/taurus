@@ -253,9 +253,10 @@ npm install
 ### Environment Variables
 
 ```
-GROQ_API_KEY=your_key
-MONGODB_URI=mongodb://localhost:27017/cowfit
 PORT=8000
+MONGODB_URI=mongodb+srv://cow:fit@cluster0.4jyhpyy.mongodb.net/?appName=Cluster0
+GROQ_API_KEY=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
+FRONTEND_DOMAIN=http://localhost:3000
 ```
 
 ---
