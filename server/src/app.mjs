@@ -7,6 +7,7 @@ import cors from "cors";
 import morgan from "morgan";
 import cowRoutes from "./routes/cow.route.mjs";
 import { startCronJobs } from "./cron/cron.analysis.mjs";
+import { sendSMS } from "./services/twilio.services.mjs";
 
 const app = express();
 
@@ -23,7 +24,12 @@ console.log("CORS Origins:", process.env.FRONTEND_DOMAIN);
 app.use(cors(corsOptions));
 app.use(morgan("dev"));
 app.use(express.json());
-startCronJobs();
+//startCronJobs();
+
+await sendSMS(
+  "+918296691500",
+  "CowFit server started successfully at " + new Date().toISOString(),
+);
 
 // Routes
 app.use("/api/cows", cowRoutes);
