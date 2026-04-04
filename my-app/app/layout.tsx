@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+// @ts-ignore: CSS imports are handled by Next.js
 import "./globals.css";
+import Script from "next/script";
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -51,12 +53,12 @@ export default function RootLayout({
           "
         />
 
-        <script
+        <Script
           type="text/javascript"
           src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
         />
 
-        <script
+        <Script
           dangerouslySetInnerHTML={{
             __html: `
       function googleTranslateElementInit() {

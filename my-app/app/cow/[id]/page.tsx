@@ -8,6 +8,7 @@ import {
   CheckCircle,
   Zap,
 } from "lucide-react";
+import { AlertCircle, Info, Phone } from "lucide-react";
 import { use, useEffect, useState } from "react";
 import { get } from "http";
 import { useSearchParams } from "next/navigation";
@@ -165,8 +166,8 @@ export default function CowDetail() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Div Content */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Basic Info Section */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-emerald-200 p-6 shadow-sm hover:shadow-md transition">
@@ -307,8 +308,9 @@ export default function CowDetail() {
                   : "Loading..."}
               </div>
               <div className="text-sm text-gray-600">
-                Latitude: {coords?.lat?.toFixed(4)} • Longitude:{" "}
-                {coords?.lng?.toFixed(4)}
+                {coords.lat != null && coords.lng != null
+                  ? `Latitude: ${coords.lat.toFixed(4)} • Longitude: ${coords.lng.toFixed(4)}`
+                  : "Fetching location..."}
               </div>
 
               <iframe
@@ -352,45 +354,198 @@ export default function CowDetail() {
         {analysis &&
           (() => {
             const risk = analysis.Risk_Level?.toLowerCase();
-            const color =
-              risk === "high"
-                ? "red"
-                : risk === "medium"
-                  ? "yellow"
-                  : risk === "low"
-                    ? "green"
-                    : "blue";
+            const isHigh = risk === "high";
+            const isMed = risk === "medium";
+            const isLow = risk === "low";
+
+            const palette = isHigh
+              ? {
+                  banner: "bg-red-100 border-red-300",
+                  badge: "bg-red-500",
+                  badgeText: "text-white",
+                  icon: "text-red-700",
+                  label: "text-red-800",
+                  step: "bg-red-100 text-red-800",
+                  vet: "bg-red-50 border-red-200 text-red-800",
+                  vetIcon: "text-red-600",
+                }
+              : isMed
+                ? {
+                    banner: "bg-amber-100 border-amber-300",
+                    badge: "bg-amber-500",
+                    badgeText: "text-white",
+                    icon: "text-amber-700",
+                    label: "text-amber-800",
+                    step: "bg-amber-100 text-amber-800",
+                    vet: "bg-amber-50 border-amber-200 text-amber-800",
+                    vetIcon: "text-amber-600",
+                  }
+                : {
+                    banner: "bg-green-100 border-green-300",
+                    badge: "bg-green-500",
+                    badgeText: "text-white",
+                    icon: "text-green-700",
+                    label: "text-green-800",
+                    step: "bg-green-100 text-green-800",
+                    vet: "bg-green-50 border-green-200 text-green-800",
+                    vetIcon: "text-green-600",
+                  };
+
+            const riskLabel = isHigh
+              ? "High risk — act now"
+              : isMed
+                ? "Medium risk — watch closely"
+                : "Low risk — monitor";
+            const riskIcon = isHigh
+              ? AlertTriangle
+              : isMed
+                ? AlertCircle
+                : CheckCircle;
+            const RiskIcon = riskIcon;
+
+            const disease =
+              analysis.possible_disease ?? analysis.Possible_Disease ?? "—";
+            const differential = analysis.differential_diagnosis ?? null;
+            const reason = analysis.reason ?? analysis.Reason ?? "—";
+            const farmerSummary = analysis.farmer_summary ?? null;
+            const urgencyHours = analysis.urgency_hours ?? null;
+            const confidence = analysis.confidence ?? null;
+
+            const rawRec =
+              analysis.recommendation ?? analysis.Recommendation ?? [];
+            const recommendations: string[] = Array.isArray(rawRec)
+              ? rawRec
+              : typeof rawRec === "string"
+                ? rawRec
+                    .split(/\n|(?=\d+\.)/)
+                    .map((s: string) => s.replace(/^\d+\.\s*/, "").trim())
+                    .filter(Boolean)
+                : [];
+
             return (
-              <div
-                className={`bg-white/80 backdrop-blur-sm rounded-2xl border border-${color}-200 p-8 mb-8 shadow-lg`}
-              >
-                <div className="flex items-start gap-4">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 overflow-hidden mb-8 shadow-lg">
+                {/* ── Risk banner ── */}
+                <div
+                  className={`${palette.banner} border-b px-5 py-4 flex items-center gap-3`}
+                >
                   <div
-                    className={`bg-${color}-100 rounded-xl p-3 flex-shrink-0`}
+                    className={`w-10 h-10 rounded-full ${palette.badge} flex items-center justify-center shrink-0`}
                   >
-                    <CheckCircle className={`w-6 h-6 text-${color}-600`} />
+                    <RiskIcon className={`w-5 h-5 ${palette.badgeText}`} />
                   </div>
-                  <div className="flex-1">
-                    <div
-                      className={`text-${color}-700 text-sm font-bold uppercase tracking-wide mb-2`}
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={`text-xs font-semibold uppercase tracking-wider ${palette.label}`}
                     >
-                      AI Health Analysis
-                    </div>
-                    <div className="text-lg font-semibold text-gray-900 mb-2">
-                      Risk Level: {analysis.Risk_Level}
-                    </div>
-                    <div className="text-md font-semibold text-gray-900 mb-4">
-                      Possible Disease:{" "}
-                      {analysis.possible_disease || analysis.Possible_Disease}
-                    </div>
-                    <p className="text-gray-700 leading-relaxed mb-4">
-                      Reason: {analysis.reason || analysis.Reason}
+                      AI health analysis
                     </p>
-                    <div className="text-sm text-gray-600 font-semibold mb-1">
-                      Recommendation:{" "}
-                      {analysis.recommendation || analysis.Recommendation}
-                    </div>
+                    <p className={`text-base font-semibold ${palette.label}`}>
+                      {riskLabel}
+                    </p>
                   </div>
+                  {confidence && (
+                    <span className="text-xs font-medium text-gray-500 bg-white/70 border border-gray-200 rounded-full px-2.5 py-1 shrink-0">
+                      {confidence} confidence
+                    </span>
+                  )}
+                </div>
+
+                <div className="p-5 flex flex-col gap-4">
+                  {/* ── Farmer summary (plain English) ── */}
+                  {farmerSummary && (
+                    <div className="flex items-start gap-2.5 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                      <Info className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {farmerSummary}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* ── Diagnosis row ── */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                      <p className="text-xs text-gray-400 font-medium mb-0.5">
+                        Possible condition
+                      </p>
+                      <p className="text-sm font-semibold text-gray-900 leading-snug">
+                        {disease}
+                      </p>
+                    </div>
+                    {differential && differential !== "None" && (
+                      <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                        <p className="text-xs text-gray-400 font-medium mb-0.5">
+                          Also consider
+                        </p>
+                        <p className="text-sm font-semibold text-gray-900 leading-snug">
+                          {differential}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── Clinical reason ── */}
+                  <div>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                      Why the AI thinks this
+                    </p>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      {reason}
+                    </p>
+                  </div>
+
+                  {/* ── Action steps ── */}
+                  {recommendations.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                        What to do now
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {recommendations.map((rec, i) => (
+                          <div
+                            key={i}
+                            className="flex items-start gap-2.5 p-2.5 rounded-xl border border-gray-100"
+                          >
+                            <div
+                              className={`w-5 h-5 rounded-full ${palette.step} flex items-center justify-center shrink-0 mt-0.5 text-xs font-semibold`}
+                            >
+                              {i + 1}
+                            </div>
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                              {rec}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── Call vet strip ── */}
+                  {(isHigh || urgencyHours !== null) && (
+                    <div
+                      className={`flex items-start gap-2.5 p-3 rounded-xl border ${palette.vet}`}
+                    >
+                      <Phone
+                        className={`w-4 h-4 ${palette.vetIcon} shrink-0 mt-0.5`}
+                      />
+                      <p className="text-sm leading-relaxed">
+                        {isHigh || urgencyHours === 0 ? (
+                          <>
+                            <span className="font-semibold">
+                              Call a vet immediately.
+                            </span>{" "}
+                            This is a high-risk reading that needs urgent
+                            attention.
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-semibold">Call a vet</span> if
+                            there is no improvement within {urgencyHours} hour
+                            {urgencyHours !== 1 ? "s" : ""}.
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -405,7 +560,7 @@ export default function CowDetail() {
             Back to Dashboard
           </button>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
