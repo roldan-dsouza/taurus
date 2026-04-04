@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 
 export default function IPManager() {
-  const [ipAddress, setIpAddress] = useState("");
+  const [ipAddress, setIpAddress] = useState("192.168.4.1");
   const [status, setStatus] = useState("Ready");
   const [isLive, setIsLive] = useState(false);
   const isLiveRef = useRef(false); // Ref used to stop the loop immediately
@@ -40,7 +40,7 @@ export default function IPManager() {
         device_id: "dev188",
         temperature: data.temperature,
         heartbeat: data.bpm - 5,
-        activity: data.intensity,
+        activity: Math.abs(data.intensity - 300),
         methane_level: data.gas,
       };
 
