@@ -25,6 +25,7 @@
     "nodemon": "^3.1.14",
     "openai": "^6.25.0",
     "pdf-parse": "^1.1.1",
-    "pdfjs-dist": "^5.4.624"
+    "pdfjs-dist": "^5.4.624",
+    "twilio": "^5.13.1"
   }
 }
